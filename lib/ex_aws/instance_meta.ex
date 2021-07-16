@@ -12,7 +12,10 @@ defmodule ExAws.InstanceMeta do
   @task_role_root "http://169.254.170.2"
 
   def request(config, url) do
-    case config.http_client.request(:get, url, "", [], http_opts()) do
+    # If we're using IMDSv2, we will need to pass in session token headers.
+    headers = get_request_headers(config)
+
+    case config.http_client.request(:get, url, "", headers, http_opts()) do
       {:ok, %{status_code: 200, body: body}} ->
         body
 
@@ -41,6 +44,11 @@ defmodule ExAws.InstanceMeta do
         ```
         """
     end
+  end
+
+  def get_request_headers(config) do
+    # TODO: Make this conditional on something in config
+    ExAws.InstanceMetaTokenProvider.get_headers(config)
   end
 
   def instance_role(config) do
